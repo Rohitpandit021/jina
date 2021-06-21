@@ -644,6 +644,45 @@ class Pod(BasePod):
         return result
 
     def _parse_base_pod_args(self, args):
+
+        if getattr(args, 'uses', None):
+            # use the executor existed in Jina Hub.
+            if args.uses.startswith('jinahub'):
+
+                from ...hubble.hubio import HubIO
+                from ...hubble.helper import parse_hub_uri
+                from ...hubble.hubapi import resolve_local
+                from ...parsers.hubble import set_hub_pull_parser
+
+                scheme, id, tag, secret = parse_hub_uri(self.args.uses)
+
+                _args_list = [id]
+                if secret:
+                    _args_list.extend(['--secret', secret])
+                pull_args = set_hub_pull_parser().parse_args(_args_list)
+                hubio = HubIO(pull_args)
+
+                # # TODO: locate the local executor
+                # if not tag:
+                #     executor = hubio.fetch(id, tag)
+
+                executor = hubio.fetch(id, tag)
+
+                if scheme == 'jinahub+docker':
+                    # use docker image
+                    args.uses = f'docker://{executor.image_name}'
+                elif scheme == 'jinahub':
+                    pkg_path = resolve_local(id, tag)
+                    if not pkg_path:
+                        hubio.pull()
+
+                    args.uses = f'{pkg_path / "config.yml"}'
+
+                else:
+                    raise NotImplementedError(
+                        f'The jinahub protocal {scheme} has not been supported!'
+                    )
+
         parsed_args = {'head': None, 'tail': None, 'peas': []}
         if getattr(args, 'parallel', 1) > 1:
             # reasons to separate head and tail from peas is that they
