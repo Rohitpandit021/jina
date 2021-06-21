@@ -1,4 +1,3 @@
-import argparse
 import re
 import time
 from collections import defaultdict
@@ -31,8 +30,11 @@ from ....types.request import Request
 class ZEDRuntime(ZMQRuntime):
     """Runtime procedure leveraging :class:`ZmqStreamlet` for Executor."""
 
-    def __init__(self, args: 'argparse.Namespace', ctrl_addr: str):
-        super().__init__(args, ctrl_addr)
+    def run_forever(self):
+        """Start the `ZmqStreamlet`."""
+        self._zmqlet.start(self._msg_callback)
+
+    def setup(self):
         """Initialize private parameters and execute private loading functions."""
         self._id = random_identity()
         self._last_active_time = time.perf_counter()
@@ -51,10 +53,6 @@ class ZEDRuntime(ZMQRuntime):
         self._load_zmqlet()
         self._load_plugins()
         self._load_executor()
-
-    def run_forever(self):
-        """Start the `ZmqStreamlet`."""
-        self._zmqlet.start(self._msg_callback)
 
     def teardown(self):
         """Close the `ZmqStreamlet` and `Executor`."""
@@ -391,10 +389,12 @@ class ZEDRuntime(ZMQRuntime):
         else:
             result = getattr(self.request, field)
 
-        # to unify all length=0 DocumentArray (or any other results) will simply considered as None
-        # otherwise the executor has to handle DocArray(0)
-        if len(result):
-            return result
+        # to unify all length=0 DocumentArray (or any other results) will simply considered as []
+        # otherwise the executor has to handle None values
+
+        if result is None:
+            result = DocumentArray([])
+        return result
 
     def _get_docs_matrix(self, field) -> List['DocumentArray']:
         """DocumentArray from (multiple) requests
