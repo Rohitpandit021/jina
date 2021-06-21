@@ -113,7 +113,7 @@ def test_l_r_l_with_upload(silent_log, parallels, mocker):
         Flow()
         .add()
         .add(
-            uses='mwu_encoder.yml',
+            uses='mwu_encoder/mwu_encoder.yml',
             host=CLOUD_HOST,
             parallel=parallels,
             upload_files=['mwu_encoder.py'],
@@ -135,9 +135,7 @@ def docker_image():
     import docker
 
     client = docker.from_env()
-    client.images.build(
-        path=os.path.join(cur_dir, '../../unit/mwu-encoder/'), tag=img_name
-    )
+    client.images.build(path=os.path.join(cur_dir, 'mwu-encoder/'), tag=img_name)
     client.close()
     yield img_name
     client = docker.from_env()

@@ -479,10 +479,9 @@ class Flow(PostMixin, JAMLCompatible, ExitStack, metaclass=FlowType):
         uses: Optional[Union[str, Type['BaseExecutor'], dict]] = 'BaseExecutor',
         uses_after: Optional[Union[str, Type['BaseExecutor'], dict]] = None,
         uses_before: Optional[Union[str, Type['BaseExecutor'], dict]] = None,
-        uses_internal: Optional[
-            Union[str, Type['BaseExecutor'], dict]
-        ] = 'BaseExecutor',
-        volumes: Optional[List[str]] = None,
+        override_with_params: Optional[Dict] = None,
+        override_metas_params: Optional[Dict] = None,
+        volumes: Optional[Union[List[str], str]] = None,
         workspace: Optional[str] = None,
         workspace_id: Optional[str] = None,
         **kwargs,
@@ -574,10 +573,6 @@ class Flow(PostMixin, JAMLCompatible, ExitStack, metaclass=FlowType):
                   - a text file stream has `.read()` interface
         :param uses_after: The executor attached after the Peas described by --uses, typically used for receiving from all parallels, accepted type follows `--uses`
         :param uses_before: The executor attached after the Peas described by --uses, typically before sending to all parallels, accepted type follows `--uses`
-        :param uses_internal: The config runs inside the Docker container.
-
-          Syntax and function are the same as `--uses`. This is designed when `--uses="docker://..."` this config is passed to
-          the Docker container.
         :param volumes: The path on the host to be mounted inside the container.
 
           Note,
